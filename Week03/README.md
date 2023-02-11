@@ -1,0 +1,3 @@
+Welcome to Homework 3. Go to Project folder and you will find Homework3.ipynb with the code for this homework. Writeup is inside Homework 3 writeup PDF.
+
+Song recommendation of the week: "Billie" by Fred again...
