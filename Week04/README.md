@@ -1,0 +1,1 @@
+All of week 4 assignment can be found in the project folder. There is a known bug that I'm still trying to fix where Total VaR doesn't calc due to an indexing bug
