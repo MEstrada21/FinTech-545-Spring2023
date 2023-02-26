@@ -14,7 +14,7 @@ setup(
     ],
     author='Your Name',
     description='Description of your package',
-    url='https://github.com/your_username/your_package',
+    url='https://github.com/MEstrada21/FinTech-545-Spring2023/tree/main/QuantRiskBookTools',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
