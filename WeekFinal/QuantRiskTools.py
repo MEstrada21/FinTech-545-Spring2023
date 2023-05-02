@@ -452,6 +452,15 @@ def calculate_var_monte_carlo_t(portfolio_df, prices_df, return_matrix, lam=0.94
         es_ret = portfolio_es_mc/sum(portfolio_values)
         print(f"Portfolio {portfolio_name} ESret: {es_ret/10:.2f}")
 
+def returns_fit(data):
+    out = {"example": ["df", "loc", "scale", "dist"]}
+    for i in data.columns:
+        temp_results = t.fit(data.loc[:,i])
+        temp_dist = t(temp_results[0], temp_results[1], temp_results[2])
+        temp = [temp_results[0], temp_results[1], temp_results[2], temp_dist]
+        out[i] = temp
+    return out    
+
 
 def UMatrix(portfolioReturns,fittedModel):
     u_returns = portfolioReturns.copy()
@@ -508,3 +517,42 @@ def copula_to_original(u_returns, fitted_models):
         original_samples[column] = fitted_models[column][-1].ppf(clipped_u_returns)
         
     return original_samples
+
+import pandas as pd
+import numpy as np
+from scipy.stats import t, norm
+from numpy.random import multivariate_normal
+
+def calculate_var_Gaussian(prices, alpha=0.05, num_simulations=10000):
+    # Calculate returns
+    returns = prices.pct_change().dropna()
+
+    # Transform the returns into uniformly distributed variables
+    uniform_data = returns.apply(lambda x: t.cdf(x, *t.fit(x)))
+
+    # Transform the uniform variables into normally distributed variables
+    norm_data = norm.ppf(uniform_data)
+
+    # Generate random samples from the multivariate normal distribution
+    mean = np.zeros(returns.shape[1])
+    cov_matrix = np.cov(norm_data, rowvar=False)
+    gaussian_copula_samples = multivariate_normal(mean, cov_matrix, num_simulations)
+
+    # Transform the Gaussian copula samples back into the original return space
+    uniform_copula_samples = norm.cdf(gaussian_copula_samples)
+    t_copula_samples = np.array([t.ppf(uniform_copula_samples[:, i], *t.fit(returns.iloc[:, i])) for i in range(returns.shape[1])]).T
+
+    # Calculate the weights of each asset based on their initial value in the portfolio
+    initial_asset_values = prices.iloc[-1]
+    initial_portfolio_value = np.sum(initial_asset_values)
+    weights = initial_asset_values / initial_portfolio_value
+
+    # Calculate the portfolio returns for each simulation
+    portfolio_returns = t_copula_samples @ weights
+
+    # Calculate the VaR at the given confidence level
+    VaR = np.percentile(portfolio_returns, alpha * 100)
+
+    return VaR
+
+
